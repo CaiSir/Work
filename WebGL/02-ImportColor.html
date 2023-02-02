@@ -2,7 +2,7 @@
 <html lang = "en">
 <head>
     <meta charset="UTF-8">
-    <title>刷底色</title>
+    <title>ImportColor</title>
     <style>
         body{
             margin: 0;
@@ -15,7 +15,8 @@
 </head>
 <body>
     <canvas id = "canvas"></canvas>
-    <script>
+    <script type="module">
+        import{ Color } from "https://unpkg.com/three/build/three.module.js"
         // 获取canvas 画布
         const canvas = document.querySelector('canvas'); // 返回文档中具有指定 CSS 选择器的第一个元素
         canvas.width = window.innerWidth;
@@ -23,14 +24,10 @@
         // 二维画笔
         // const gl = canvas.getContext('2d');
         // 使用canvas 获取webgl绘图上下文, 三维画笔 
+
+        // vulkan
         const gl = canvas.getContext('webgl');
-        // // 颜色rgba
-        // gl.clearColor(1,1,0,1);
-        // // 刷底色
-        // gl.clear(gl.COLOR_BUFFER_BIT)
-        /*
-             指定一个CSS颜色转化到WebGL中进行渲染
-        */
+      
         const rgbaCss = "Rgba(255,255,0,1)";
         const reg = new RegExp(/\((.*)\)/);
         const matchStr = rgbaCss.match(reg);
@@ -40,16 +37,31 @@
         const g = strMap[1]/255
         const b = strMap[2]/255
         const a = strMap[3];
-        const ttt =strMap[4]; // 不会报错
-        console.log(ttt);
+
          // 颜色rgba
-         gl.clearColor(r,g,b,a);
-        // 刷底色
-        gl.clear(gl.COLOR_BUFFER_BIT)
-
+        const color = new Color('rgba(255,255,0,1)');
+        gl.clearColor(color.r,color.g,color.b,1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        /*
+        HSL即色相、饱和度、亮度（英语：Hue, Saturation, Lightness）。
+        色相（H）是色彩的基本属性，就是平常所说的颜色名称，如红色、黄色等。
+        饱和度（S）是指色彩的纯度，越高色彩越纯，低则逐渐变灰，取0-100%的数值。
+        明度（V），亮度（L），取0-100%
+        */
+        !(function ani(){
+            color.offsetHSL(0.005,0,0);  // 仅设置了色相，对颜色进行偏移
+            gl.clearColor(color.r,color.g,color.b,1);
+            console.log(color.r,color.g,color.b)
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            requestAnimationFrame(ani);
+            console.log("111");
+        }
+        )();
+        
         
 
-        
+
+
     </script>
 </body>
 
