@@ -28,15 +28,15 @@
         主要是因为着色器的代码就是简单的字符串，可以直接在javascript内部定义字符串。
         这样的话，着色器被定义在了javascript文件中，HTML的代码就变的简单多了    
     -->
-    <script id = 'Vertex' type = 'x-shader/x-vertex'>
+    <script id = 'VertexShader' type = 'x-shader/x-vertex'>
         void main(){
-            gl_Position = {1.0f，1.0f,1.0f};
+            gl_Position = vec4(0.0f，0.0f,0.0f,1.0f);
+            gl_Pointsize =100.0f;
         }
-
     </script>
-    <script id ='Framgent' type = 'x-shader/x-framgent' >
+    <script id ='FragmentShader' type = 'x-shader/x-fragment' >
         void main(){
-            
+            gl_FragColor =vec4(1.0,1.0,0.0,1.0);
         }    
     </script>
     <script type="module">
@@ -62,13 +62,20 @@
         const b = strMap[2]/255
         const a = strMap[3];
 
+        const vsSource = document.getElementById('VertexShader').innerText;
+        const fsSource = document.getElementById('FragmentShader').innerText;
+        // 初始化着色器
+        initShaders(gl,vsSource,fsSource);
          // 颜色rgba
         const color = new Color('rgba(255,255,0,1)');
         gl.clearColor(color.r,color.g,color.b,1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         
         
+        function initShaders(gl,vsSource,fsSource)
+        {
 
+        }
 
     </script>
 </body>
