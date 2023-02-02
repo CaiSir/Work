@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JavaScript</title>
+</head>
+<body onload="accesskey()">
+    <a id="r" class="aaa bbb ccc" href="javascript:;">使用 Alt + r 访问该元素</a><br>
+    <a id="g" href="javascript:;">使用 Alt + g 访问该元素</a><br>
+    <script type="text/javascript">
+        function accesskey(){
+            // document.getElementById('r').accessKey="r"
+            document.getElementById('g').accessKey="g"
+            document.getElementById('r').accessKey="r"
+           
+
+        }
+        var ele = document.getElementById('r');
+        console.log(ele.attributes);                            // 输出：NamedNodeMap {0: id, 1: href, id: id, href: href, length: 2}
+        console.log(document.body.childNodes);                  // 输出：NodeList(7) [text, a#r, br, text, a#g, text, script]
+        console.log(ele.classList);                             // 输出：DOMTokenList(3) ["aaa", "bbb", "ccc", value: "aaa bbb ccc"]
+        console.log(ele.className);                             // 输出：aaa bbb ccc
+        console.log(ele.clientHeight);                          // 输出：DOMTokenList(3) ["aaa", "bbb", "ccc", value: "aaa bbb ccc"]
+        console.log(ele.tagName);                               // 输出：A
+        console.log(ele.compareDocumentPosition(document.getElementById('g')));     // 输出：4
+        console.log(ele.getAttribute('href'));                  // 输出：javascript:;
+        console.log(ele.getAttributeNode('href'));              // 输出：href="javascript:;"
+    </script>
+    <a href="javascript:;" target="www.baidu.com" id="myLink">JavaScript</a><br>
+    <script type  ="text/javascript">
+       var linkEle = document.getElementById("myLink");
+       var attr = linkEle.attributes;
+       console.log(attr.target.value);
+    //    console.log(attr.target.specified);
+    //    console.log(attr.target.isId);
+    //    console.log(attr.target.name);
+    //    console.log(attr.target.value);
+    //    console.log(attr.getNamedItem('href').nodeValue);
+    //    console.log(attr.getNamedItem('href').value);
+    //    console.log(attr.getNamedItem('href').textContent);
+    //    document.write(linkEle.attributes.target.value + "<br>"); 
+        console.log(attr.removeNamedItem('target') + "<br>");
+        var cla = document.createAttribute('class');
+        cla.value = 'democlass';
+        console.log(attr.setNamedItem(cla) + "<br>");
+
+        console.log(attr.class.value);
+    </script>
+</body>
+</html>

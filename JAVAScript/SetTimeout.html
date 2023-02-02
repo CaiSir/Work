@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JavaScript</title>
+</head>
+<body>
+    <script type="text/javascript">
+        var func = function(str = '默认参数'+ '<br>'){
+            document.write(str);
+        }
+        setTimeout(func,1000,'hello'+ '<br>');
+        setTimeout(func,1000);
+        setTimeout(() => {
+            document.write("定时器" + '<br>')
+        }, 1000);
+    </script>
+</body>
+</html>

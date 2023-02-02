@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible">
+    <meta name ="viewport">
+    <title>Document</title>
+</head>
+<body>
+    <div>窗口2</div>
+    <script>
+        window.top.addEventListener('message', (e)=>{console.log(e)},false)
+        //window.addEventListener("message",(e)=>{}, false)
+    </script>
+</body>
+
+</html>
