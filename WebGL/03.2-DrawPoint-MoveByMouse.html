@@ -36,9 +36,11 @@
             gl_PointSize = a_pointSize;
         }
     </script>
-    <script id ='FragmentShader' type = 'x-shader/x-fragment' >
+    <script id ='FragmentShader' type = 'x-shader/x-fragment'>
+        precision mediump float;
+        uniform vec4 u_Color;
         void main(){
-            gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+            gl_FragColor = u_Color;
         }    
     </script>
     <script>
@@ -81,6 +83,8 @@
             // console.log(g_points);
             gl.clearColor(0.5,0.5,0.0,1);
             gl.clear(gl.COLOR_BUFFER_BIT);
+            var color = gl.getUniformLocation(gl.program,'u_Color')
+            gl.uniform4f(color,0.0,0.0,0.0,1.0);
             for (let i = 0 ; i < g_points.length; i++)
             {
                 const xy = g_points[i];
@@ -129,14 +133,15 @@
 
             var size = gl.getAttribLocation(gl.program,'a_pointSize');
             gl.vertexAttrib1f(size,50.0);
-
             // 尝试用attribute 修改片段着色器，失败告终，以为vertexAttrib很明显，
             // 只能用于顶点着色器。很蠢，至于片段着色器怎么修改，继续学吧。
-            canvas.onmousedown = function(ev){ click(ev,gl,canvas,aPostion);};
-
-
             gl.clearColor(0.0,0.0,0.0,1);
             gl.clear(gl.COLOR_BUFFER_BIT);
+
+            var color = gl.getUniformLocation(gl.program,'u_Color')
+            gl.uniform4f(color,1.0,0.0,0.0,1.0);
+
+            canvas.onmousedown = function(ev){ click(ev,gl,canvas,aPostion);};
             gl.drawArrays(gl.POINTS,0,1);
        }
     </script>
