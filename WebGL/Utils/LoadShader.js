@@ -16,7 +16,7 @@ function initShaders(gl, vsSource, fsSource) {
         return false;
     }
     gl.useProgram(shaderProgram);
-   // gl.program = shaderProgram;
+    gl.program = shaderProgram;
     return true;
 }
 
