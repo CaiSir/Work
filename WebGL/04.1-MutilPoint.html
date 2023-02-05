@@ -131,25 +131,65 @@
        }
        else
        {
-            var aPostion = gl.getAttribLocation(gl.program,'a_postion');
-            //gl.vertexAttrib3f(aPostion,0.0,0.0,0.0);  
-
-            var size = gl.getAttribLocation(gl.program,'a_pointSize');
-            gl.vertexAttrib1f(size,50.0);
-            // 尝试用attribute 修改片段着色器，失败告终，以为vertexAttrib很明显，
-            // 只能用于顶点着色器。很蠢，至于片段着色器怎么修改，继续学吧。
-            gl.clearColor(0.0,0.0,0.0,1);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-
-            var color = gl.getUniformLocation(gl.program,'u_Color')
-            if(!color)
+            var n = initVertexBuffers();
+            if(n > 0)
             {
-                console.log('Fail to get uColor');
+                gl.clearColor(0.0,0.0,0.0,1);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                var color = gl.getUniformLocation(gl.program,'u_Color')
+                if(!color)
+                {
+                    console.log('Fail to get uColor');
+                }
+                gl.uniform4f(color,1.0,1.0,0.0,1.0);
+                gl.drawArrays(gl.POINTS,0,n);
+                
             }
-            gl.uniform4f(color,1.0,0.0,0.0,1.0);
+            else
+            {
+                var aPostion = gl.getAttribLocation(gl.program,'a_postion');
+                //gl.vertexAttrib3f(aPostion,0.0,0.0,0.0);  
 
-            canvas.onmousedown = function(ev){ click(ev,gl,canvas,aPostion);};
-            gl.drawArrays(gl.POINTS,0,1);
+                var size = gl.getAttribLocation(gl.program,'a_pointSize');
+                gl.vertexAttrib1f(size,50.0);
+                // 尝试用attribute 修改片段着色器，失败告终，以为vertexAttrib很明显，
+                // 只能用于顶点着色器。很蠢，至于片段着色器怎么修改，继续学吧。
+                gl.clearColor(0.0,0.0,0.0,1);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                var color = gl.getUniformLocation(gl.program,'u_Color')
+                if(!color)
+                {
+                    console.log('Fail to get uColor');
+                }
+                gl.uniform4f(color,1.0,0.0,0.0,1.0);
+
+                canvas.onmousedown = function(ev){ click(ev,gl,canvas,aPostion);};
+                gl.drawArrays(gl.POINTS,0,1);
+            }
+       }
+
+       function initVertexBuffers()
+       {
+            var Vertexs = new Float32Array([0.0,0.5,-0.5, -0.5,0.5,-0.5]);
+            var n = Vertexs.length / 2;
+            console.log(n)
+            // 创建缓冲区对象
+            var vertexBufferObj = gl.createBuffer(); 
+            if(!vertexBufferObj)
+            {
+                console('createBuffer error')
+                return -1;
+            }
+            // 将缓冲区对象绑定到目标
+            gl.bindBuffer(gl.ARRAY_BUFFER,vertexBufferObj);
+            // 向缓冲区中写入目标
+            gl.bufferData(gl.ARRAY_BUFFER,Vertexs,gl.STATIC_DRAW);
+            var a_postion = gl.getAttribLocation(gl.program,'a_postion');
+            // 将缓冲区对象分配给a_postion
+            gl.vertexAttribPointer(a_postion,2,gl.FLOAT,false,0,0);
+            gl.enableVertexAttribArray(a_postion);
+            return n;
        }
     </script>
 </body>
