@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <script id = 'VertexShader' type = 'x-shader/x-vertex'>
+        attribute vec4 a_postion;
+        uniform vec4 movePostion;
+        uniform float u_SinB,u_CosB;
+        uniform mat4 u_mat;
+        //attribute float a_pointSize; 
+        void main(){
+            //gl_Position = a_postion;
+            gl_Position = u_mat * a_postion;
+            // gl_Position.x = a_postion.x * u_CosB  - a_postion.y * u_SinB;
+            // gl_Position.y = a_postion.x * u_SinB + a_postion.y * u_CosB;
+            // gl_Position.z = a_postion.z;
+            // gl_Position.w = 1.0;
+            // gl_PointSize = a_pointSize;
+        }
+    </script>
+    <script id ='FragmentShader' type = 'x-shader/x-fragment'>
+            precision mediump float;
+            uniform vec4 u_Color;
+            void main(){
+                gl_FragColor = u_Color;
+            }    
+    </script>
+</body>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="UTF-8">
+    <title>ImportColor</title>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+        #canvas{
+            background-color: antiquewhite;
+        }
+    </style>
+</head>
+<body>
+    <canvas id = "canvas"></canvas>
+
+    <!-- 
+        指定type属性的理由
+        type属性指定了［x-shader/x-vertex］和［x-shader/x-fragment］，这并不是HTML中定义的正式的写法。
+        但是一般的浏览器如果遇到不识别的标签的话会无视掉的，浏览器不会认为这是javascript代码的。
+        浏览器只会把它当成无意义的字符串，而程序中则可以使用标签里面的内容。 
+        也就是：浏览器就不会认为这是一个单独的新的script标签（js文件），而是一段用script首尾标签包含起来的普通字符串文本
+
+
+        另一个，也可以不使用script标签来做。
+        主要是因为着色器的代码就是简单的字符串，可以直接在javascript内部定义字符串。
+        这样的话，着色器被定义在了javascript文件中，HTML的代码就变的简单多了   
+        
+        attribute 定义的是与顶点相关的数据
+        uniform 定义的是与顶点无关的，公共数据，比如数据变换
+    -->
+    <script id = 'VertexShader' type = 'x-shader/x-vertex'>
+        attribute vec4 a_postion;
+        uniform vec4 movePostion;
+        uniform float u_SinB,u_CosB;
+        uniform mat4 u_mat;
+        //attribute float a_pointSize; 
+        void main(){
+            //gl_Position = a_postion;
+            gl_Position = u_mat * a_postion;
+            // gl_Position.x = a_postion.x * u_CosB  - a_postion.y * u_SinB;
+            // gl_Position.y = a_postion.x * u_SinB + a_postion.y * u_CosB;
+            // gl_Position.z = a_postion.z;
+            // gl_Position.w = 1.0;
+            // gl_PointSize = a_pointSize;
+        }
+    </script>
+    <script id ='FragmentShader' type = 'x-shader/x-fragment'>
+        precision mediump float;
+        uniform vec4 u_Color;
+        void main(){
+            gl_FragColor = u_Color;
+        }    
+    </script>
+    <script>
+        // 画出鼠标多次点击的点
+        var g_points = [];
+        function click(ev,gl,canvas,aPostion)
+        {
+           // console.log(ev);
+            var x = ev.clientX;
+            var y = ev.clientY;
+            var rect = ev.target.getBoundingClientRect();
+            console.log(x,y,rect);
+            // 如何将鼠标屏幕坐标点转化为webGL坐标点
+            console.log(canvas.width,canvas.height)
+            // 我们一步步分解，首先canvas坐标系和webGL坐标系统
+            /*
+                canvas坐标系                       webGL坐标系
+            0 ------------------> X                     ^ Y   
+            |                                           |
+            |                                           |
+            |                                   --------|--------> X          
+            |                                          0|
+            |                                           |
+            v  Y                                        |
+            1、首先屏幕坐标系比Canvas坐标系要大，先将点平移到canvas坐标系上。
+                    即 x = x-rect.left\ y = y- rect.top
+            2、因为canvas与webGL坐标原点不一致，所以将点原点转化到webGL原点，进行平移
+                    即 x = x - (canvas.width / 2) \  y = y - (canvas.height/2)
+            3、因为webGL 坐标系范围是 [-1,1][-1,1],将点进行转化。
+                    即 x = x / (canvas.width/2) , y = y/(canvas.height/2)
+            4、总结起来则是
+                    x = ((x-rect.left) - (canvas.width / 2)) / (canvas.width/2);
+                    y = -(((y- rect.top) - (canvas.height/ 2)) / (canvas.height/2));
+
+            */
+
+            x = ((x-rect.left) - (canvas.width / 2)) / (canvas.width/2);
+            y =  -(((y- rect.top) - (canvas.height/ 2)) / (canvas.height/2));
+            g_points.push([x,y]);
+            // console.log(g_points);
+            gl.clearColor(0.5,0.5,0.0,1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            var color = gl.getUniformLocation(gl.program,'u_Color')
+            gl.uniform4f(color,0.0,0.0,0.0,1.0);
+            for (let i = 0 ; i < g_points.length; i++)
+            {
+                const xy = g_points[i];
+                gl.vertexAttrib3f(aPostion,xy[0],xy[1],0.0);
+                gl.drawArrays(gl.POINTS,0,1);
+            }
+
+            
+           
+            
+        }
+    </script>
+    <!--
+        绑定着色器程序并进行编译
+    -->
+    <script type="module">
+        //import{ Color } from "https://unpkg.com/three/build/three.module.js"
+        import {initShaders} from "../Utils/LoadShader.js"
+        // 获取canvas 画布
+        const canvas = document.querySelector('canvas'); // 返回文档中具有指定 CSS 选择器的第一个元素
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        console.log(canvas.width,canvas.height);
+        // 二维画笔
+        // const gl = canvas.getContext('2d');
+        // 使用canvas 获取webgl绘图上下文, 三维画笔 
+
+        // vulkan
+        const gl = canvas.getContext('webgl');
+
+        // 注册鼠标点击事件响应函数
+       
+       
+        const vsSourceStr = document.querySelector('#VertexShader').innerText;
+        const fsSourceStr = document.querySelector('#FragmentShader').innerText;
+        // 初始化着色器
+       if (!initShaders(gl,vsSourceStr,fsSourceStr))
+       {
+            console.log("initShader error");
+            alert('初始化Shader失败');
+       }
+       else
+       {
+            gl.clearColor(0.0,0.0,0.0,1.0);
+
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+            var angle = -90;
+            var radian = Math.PI * angle / 180.0;  // 弧度制
+            console.log(radian)
+            var cosb = Math.cos(radian);
+            var sinb = Math.sin(radian);
+            console.log(sinb,cosb);
+
+            var vertices = new Float32Array([-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,-0.5]);
+
+            var utMaxtex = new Float32Array([
+                cosb, sinb, 0.0, 0.0,
+                -sinb, cosb , 0.0, 0.0,
+                0.0,  0.0, 1.0, 0.0,
+                0.0,  0.0, 0.0, 1.0
+            ]);
+
+            // 创建缓冲区对象 VBO
+            var vertexBuffer = gl.createBuffer();
+            // 绑定VBO对象 
+            gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+            // 向缓冲区写入对象
+            gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
+            // 获取着色器postion变量
+            var aPostion =  gl.getAttribLocation(gl.program,'a_postion');
+
+         
+
+            // 仅在绘制点的时候有效果
+            // var aSize = gl.getAttribLocation(gl.program,'a_pointSize') 
+            // gl.vertexAttrib1f(aSize,50.0);
+
+            // 将aPostion绑定缓冲区
+            gl.vertexAttribPointer(aPostion,2,gl.FLOAT,false,0,0);
+            // 
+            gl.enableVertexAttribArray(aPostion);
+
+            // var movePostion =  gl.getUniformLocation(gl.program,'movePostion');
+            // gl.uniform4f(movePostion,0.5,0.0,0.0,0.0);
+            
+          
+            // var u_SinB = gl.getUniformLocation(gl.program,'u_SinB');
+            // gl.uniform1f(u_SinB,sinb);
+            // var u_CosB = gl.getUniformLocation(gl.program,'u_CosB');
+            // gl.uniform1f(u_CosB,cosb);
+            var uColor = gl.getUniformLocation(gl.program,'u_Color');
+            gl.uniform1f(uColor,50.0);
+            
+            var u_mat = gl.getUniformLocation(gl.program,'u_mat');
+            gl.uniformMatrix4fv(u_mat,false,utMaxtex);
+
+            gl.uniform4f(uColor,1.0,1.0,0.0,0.0);
+
+            // 这个参数填错了，花了我一上午的事件查。主要原因，是size大小没有设置，导致默认大小看不见
+            gl.drawArrays(gl.TRIANGLES,0,3); 
+
+
+       }
+    </script>
+</body>
+
+</html>
