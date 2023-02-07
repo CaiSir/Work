@@ -26,14 +26,25 @@
 
         另一个，也可以不使用script标签来做。
         主要是因为着色器的代码就是简单的字符串，可以直接在javascript内部定义字符串。
-        这样的话，着色器被定义在了javascript文件中，HTML的代码就变的简单多了    
+        这样的话，着色器被定义在了javascript文件中，HTML的代码就变的简单多了   
+        
+        attribute 定义的是与顶点相关的数据
+        uniform 定义的是与顶点无关的，公共数据，比如数据变换
     -->
     <script id = 'VertexShader' type = 'x-shader/x-vertex'>
         attribute vec4 a_postion;
-        attribute float a_pointSize; 
+        uniform vec4 movePostion;
+        uniform float u_SinB,u_CosB;
+        uniform mat4 u_mat;
+        //attribute float a_pointSize; 
         void main(){
-            gl_Position = a_postion;
-            gl_PointSize = a_pointSize;
+            //gl_Position = a_postion;
+            gl_Position = u_mat * a_postion;
+            // gl_Position.x = a_postion.x * u_CosB  - a_postion.y * u_SinB;
+            // gl_Position.y = a_postion.x * u_SinB + a_postion.y * u_CosB;
+            // gl_Position.z = a_postion.z;
+            // gl_Position.w = 1.0;
+            // gl_PointSize = a_pointSize;
         }
     </script>
     <script id ='FragmentShader' type = 'x-shader/x-fragment'>
@@ -117,13 +128,13 @@
 
         // 注册鼠标点击事件响应函数
        
-
+       
         const vsSourceStr = document.querySelector('#VertexShader').innerText;
         const fsSourceStr = document.querySelector('#FragmentShader').innerText;
         // 初始化着色器
        if (!initShaders(gl,vsSourceStr,fsSourceStr))
        {
-            console.log("initShader error")
+            console.log("initShader error");
             alert('初始化Shader失败');
        }
        else
@@ -132,7 +143,23 @@
 
             gl.clear(gl.COLOR_BUFFER_BIT);
 
+
+            var angle = -90;
+            var radian = Math.PI * angle / 180.0;  // 弧度制
+            console.log(radian)
+            var cosb = Math.cos(radian);
+            var sinb = Math.sin(radian);
+            console.log(sinb,cosb);
+
             var vertices = new Float32Array([-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,-0.5]);
+
+            var utMaxtex = new Float32Array([
+                cosb, sinb, 0.0, 0.0,
+                -sinb, cosb , 0.0, 0.0,
+                0.0,  0.0, 1.0, 0.0,
+                0.0,  0.0, 0.0, 1.0
+            ]);
+
             // 创建缓冲区对象 VBO
             var vertexBuffer = gl.createBuffer();
             // 绑定VBO对象 
@@ -142,38 +169,37 @@
             // 获取着色器postion变量
             var aPostion =  gl.getAttribLocation(gl.program,'a_postion');
 
+         
+
             // 仅在绘制点的时候有效果
-            var aSize = gl.getAttribLocation(gl.program,'a_pointSize') 
-            gl.vertexAttrib1f(aSize,50.0);
+            // var aSize = gl.getAttribLocation(gl.program,'a_pointSize') 
+            // gl.vertexAttrib1f(aSize,50.0);
 
             // 将aPostion绑定缓冲区
             gl.vertexAttribPointer(aPostion,2,gl.FLOAT,false,0,0);
             // 
             gl.enableVertexAttribArray(aPostion);
 
-            var uColor = gl.getUniformLocation(gl.program,'u_Color');
+            // var movePostion =  gl.getUniformLocation(gl.program,'movePostion');
+            // gl.uniform4f(movePostion,0.5,0.0,0.0,0.0);
             
-            gl.uniform4f(uColor,1.0,1.0,0.0,1.0);
+          
+            // var u_SinB = gl.getUniformLocation(gl.program,'u_SinB');
+            // gl.uniform1f(u_SinB,sinb);
+            // var u_CosB = gl.getUniformLocation(gl.program,'u_CosB');
+            // gl.uniform1f(u_CosB,cosb);
+            var uColor = gl.getUniformLocation(gl.program,'u_Color');
+            gl.uniform1f(uColor,50.0);
+            
+            var u_mat = gl.getUniformLocation(gl.program,'u_mat');
+            gl.uniformMatrix4fv(u_mat,false,utMaxtex);
+
+            gl.uniform4f(uColor,1.0,1.0,0.0,0.0);
 
             // 这个参数填错了，花了我一上午的事件查。主要原因，是size大小没有设置，导致默认大小看不见
-            gl.drawArrays(gl.TRIANGLE_STRIP,0,4); 
+            gl.drawArrays(gl.TRIANGLES,0,3); 
 
 
-            // var aPostion = gl.getAttribLocation(gl.program,'a_postion');
-            // //gl.vertexAttrib3f(aPostion,0.0,0.0,0.0);  
-
-            // var size = gl.getAttribLocation(gl.program,'a_pointSize');
-            // gl.vertexAttrib1f(size,50.0);
-            // // 尝试用attribute 修改片段着色器，失败告终，以为vertexAttrib很明显，
-            // // 只能用于顶点着色器。很蠢，至于片段着色器怎么修改，继续学吧。
-            // gl.clearColor(0.0,0.0,0.0,1);
-            // gl.clear(gl.COLOR_BUFFER_BIT);
-
-            // var color = gl.getUniformLocation(gl.program,'u_Color')
-            // gl.uniform4f(color,1.0,0.0,0.0,1.0);
-
-            // canvas.onmousedown = function(ev){ click(ev,gl,canvas,aPostion);};
-            // gl.drawArrays(gl.POINTS,0,1);
        }
     </script>
 </body>
