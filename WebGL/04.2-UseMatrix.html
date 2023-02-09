@@ -29,13 +29,13 @@
         这样的话，着色器被定义在了javascript文件中，HTML的代码就变的简单多了    
     -->
     <script id = 'VertexShader' type = 'x-shader/x-vertex'>
-        attribute vec4 a_postion;
-        attribute float a_pointSize; 
-        uniform mat4 u_mat4;
+        attribute vec3 a_postion;
+        uniform mat4 u_mat;
         void main(){
-            gl_Position = u_mat4 * a_postion;
-            //gl_PointSize = a_pointSize;
+            gl_Position = u_mat * vec4(a_postion,1.0);
+          //  gl_PointSize = 30.0;
         }
+
     </script>
     <!--
         precision mediump float; 设置变量的精度，精度限定词，没有这个会报错
@@ -44,7 +44,7 @@
         precision mediump float;
         uniform vec4 u_Color;
         void main(){
-            gl_FragColor = u_Color;
+            gl_FragColor = vec4(1.0,0.0,0.0,1.0);
         }    
     </script>
     <script>
@@ -103,7 +103,7 @@
     <!-- <script src="./node_modules/gl-matrix/gl-matrix.js"></script> -->
     <script type="module">
         import {initShaders} from "../Utils/LoadShader.js";
-        import {Matrix4} from "https://unpkg.com/three/build/three.module.js";
+        import { Matrix4 } from "https://unpkg.com/three/build/three.module.js";
         
         // 获取canvas 画布
         const canvas = document.querySelector('canvas'); // 返回文档中具有指定 CSS 选择器的第一个元素
@@ -130,30 +130,44 @@
        }
        else
        {
-        gl.clearColor(0.0,0.0,0.0,1.0);
+      
 
-        gl.clear(gl.COLOR_BUFFER_BIT);
+            // 大多数旋转函数需要用弧度制的角，但幸运的是角度制的角也可以很容易地转化为弧度制的：
 
+            // 弧度转角度：角度 = 弧度 * (180.0f / PI)
+            // 角度转弧度：弧度 = 角度 * (PI / 180.0f)
+            // PI约等于3.14159265359。
 
-        var angle = -90;
+        let angle = 0;
         var radian = Math.PI * angle / 180.0;  // 弧度制
-        console.log(radian)
         var cosb = Math.cos(radian);
         var sinb = Math.sin(radian);
         console.log(sinb,cosb);
 
-        var vertices = new Float32Array([-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,-0.5]);
-
+        var vertices = new Float32Array([0.0,0.5,0.0,-0.5,-0.5,0.0,0.5,-0.5,0.0]);
+5
         var utMaxtex = new Float32Array([
             cosb, sinb, 0.0, 0.0,
             -sinb, cosb , 0.0, 0.0,
             0.0,  0.0, 1.0, 0.0,
             0.0,  0.0, 0.0, 1.0
         ]);
-        console.log(utMaxtex);
+        var utMaxtex1= new Float32Array([
+            1, 0, 0.0, 0.0,
+            0, 1 , 0.0, 0.0,
+            0.0,  0.0, 1.0, 0.0,
+            0.0,  0.0, 0.0, 1.0
+        ]);
+
+        console.log('自定义的：' + utMaxtex);
         const matrix  = new Matrix4();
+        //console.log(matrix);
+        //
         matrix.makeRotationZ(radian);
-        console.log(matrix);
+        
+        // matrix.makeTranslation(1,0,0);
+        //matrix.makeRotationZ(radian);
+        console.log('库生成的：' +  matrix.elements);
 
         // 创建缓冲区对象 VBO
         var vertexBuffer = gl.createBuffer();
@@ -166,27 +180,45 @@
         // 仅在绘制点的时候有效果
         // var aSize = gl.getAttribLocation(gl.program,'a_pointSize') 
         // gl.vertexAttrib1f(aSize,50.0);
-
+      
         // 将aPostion绑定缓冲区
-        gl.vertexAttribPointer(aPostion,2,gl.FLOAT,false,0,0);
+        gl.vertexAttribPointer(aPostion,3,gl.FLOAT,false,0,0);
         // 
         gl.enableVertexAttribArray(aPostion);
 
+        // 此处的变量很容易写错与着色器上的不一致，导致绘图失败
+     
         var u_mat = gl.getUniformLocation(gl.program,'u_mat');
         
-        gl.uniformMatrix4fv(u_mat,false, matrix.elements);
-        
-        var uColor = gl.getUniformLocation(gl.program,'u_Color');
-        //gl.uniform1f(uColor,50.0);
-        gl.uniform4f(uColor,1.0,1.0,0.0,0.0);
+        gl.uniformMatrix4fv(u_mat,false, utMaxtex);
 
-   
+        // var uColor = gl.getUniformLocation(gl.program,'u_Color');
+        // //gl.uniform1f(uColor,50.0);
+        // gl.uniform4f(uColor,1.0,0.0,0.0,1.0);
+        gl.clearColor(0.0,0.0,0.0,1.0);
 
-        
+        gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-       }
+        gl.drawArrays(gl.TRIANGLE_STRIP,0,3);
 
+        // 使用requestAnimationFrame 函数执行动画
+            !(function ani() {
+                angle += 0.5;
+                var radian = Math.PI * angle / 180.0;  // 弧度制
+                var cosb = Math.cos(radian);
+                var sinb = Math.sin(radian);
+                var utMaxtexani = new Float32Array([
+                cosb, sinb, 0.0, 0.0,
+                -sinb, cosb , 0.0, 0.0,
+                0.0,  0.0, 1.0, 0.0,
+                0.0,  0.0, 0.0, 1.0
+                ]);
+                gl.uniformMatrix4fv(u_mat,false, utMaxtexani);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLE_STRIP,0,3);
+                requestAnimationFrame(ani);
+        });
+       };
     </script>
 </body>
 
