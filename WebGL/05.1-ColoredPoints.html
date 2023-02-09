@@ -31,9 +31,10 @@
     <script id = 'VertexShader' type = 'x-shader/x-vertex'>
         attribute vec3 a_postion;
         uniform mat4 u_mat;
+        attribute float u_size;
         void main(){
-            gl_Position = u_mat * vec4(a_postion,1.0);
-          //  gl_PointSize = 30.0;
+            gl_Position =  vec4(a_postion,1.0);
+            gl_PointSize = u_size;
         }
 
     </script>
@@ -76,8 +77,30 @@
        }
        else
        {
-            
+            var verteices = new Float32Array(
+                [
+                    0.0,0.3,0.0,10.0,1.0,0.0,0.0,
+                    -0.3,-0.3,0.0,20.0,0.0,1.0,0.0,
+                    0.3,-0.3,0.0,30.0,0.0,0.0,1.0
+                ]
+            );
 
+            var FSize = verteices.BYTES_PER_ELEMENT;
+            var vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER,verteices,gl.STATIC_DRAW);
+            var aPostion = gl.getAttribLocation(gl.program,"a_postion");
+            console.log(aPostion);
+            gl.vertexAttribPointer(0,2,gl.FLOAT,false,FSize*7,FSize*4);
+            gl.enableVertexAttribArray(aPostion);
+
+            var uSize = gl.getAttribLocation(gl.program,'u_size');
+            gl.vertexAttribPointer(uSize,1,gl.FLOAT,false,FSize*7,FSize*3);
+            gl.enableVertexAttribArray(uSize);
+
+            gl.clearColor(0.0,0.0,0.0,1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.POINTS,0,3);
        }
     </script>
 </body>
