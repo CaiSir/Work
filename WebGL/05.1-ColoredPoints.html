@@ -47,8 +47,11 @@
     <script id ='FragmentShader' type = 'x-shader/x-fragment'>
         precision mediump float;
         varying vec4 v_color;
+        uniform float u_width;
+        uniform float u_height;
         void main(){
-            gl_FragColor = v_color;
+            gl_FragColor  = vec4(gl_FragCoord.x / u_width,0.0, gl_FragCoord.y / u_height,1.0);
+           // gl_FragColor = v_color;
         }    
     </script>
     <!--
@@ -105,6 +108,12 @@
             var aColor = gl.getAttribLocation(gl.program,'a_color');
             gl.vertexAttribPointer(aColor,3,gl.FLOAT,false,FSize*7,FSize*4);
             gl.enableVertexAttribArray(aColor);
+
+            var u_width = gl.getUniformLocation(gl.program,'u_width');
+            gl.uniform1f(u_width,canvas.width);
+
+            var u_height = gl.getUniformLocation(gl.program,'u_heigth');
+            gl.uniform1f(u_height,canvas.height);
 
             gl.clearColor(0.0,0.0,0.0,1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);

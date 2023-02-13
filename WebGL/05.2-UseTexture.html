@@ -1,0 +1,205 @@
+<!--
+    WebGL使用进行纹理映射步骤
+    1、准备好纹理图像
+    2、为几何图形配置纹理映射方式
+    3、加载纹理图像
+    4、在片段着色器中从纹理中抽取纹素，并将纹素的颜色赋给片元（纹素：纹理图像的像素）
+
+    谷歌浏览器开启 --allow-file-access-from-files选项支持从本地使用纹理图像
+-->
+
+
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="UTF-8">
+    <title>ImportColor</title>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+        #canvas{
+            background-color: antiquewhite;
+        }
+    </style>
+</head>
+<body>
+    <!-- <img id= "imgTest" src="wall.jpg"> -->
+
+    <canvas id = "canvas"></canvas>
+
+    <!-- 
+        指定type属性的理由
+        type属性指定了［x-shader/x-vertex］和［x-shader/x-fragment］，这并不是HTML中定义的正式的写法。
+        但是一般的浏览器如果遇到不识别的标签的话会无视掉的，浏览器不会认为这是javascript代码的。
+        浏览器只会把它当成无意义的字符串，而程序中则可以使用标签里面的内容。 
+        也就是：浏览器就不会认为这是一个单独的新的script标签（js文件），而是一段用script首尾标签包含起来的普通字符串文本
+
+
+        另一个，也可以不使用script标签来做。
+        主要是因为着色器的代码就是简单的字符串，可以直接在javascript内部定义字符串。
+        这样的话，着色器被定义在了javascript文件中，HTML的代码就变的简单多了    
+    -->
+    <script id = 'VertexShader' type = 'x-shader/x-vertex'>
+        attribute vec4 a_Position;
+        attribute vec2 a_TextCoord;
+        varying vec2 v_TextCoord;
+        void main(){
+            gl_Position =  a_Position;
+            v_TextCoord = a_TextCoord;
+        }
+
+    </script>
+    <!--
+        precision mediump float; 设置变量的精度，精度限定词，没有这个会报错
+    -->
+    <script id ='FragmentShader' type = 'x-shader/x-fragment'>
+        precision mediump float;
+        uniform sampler2D u_Sampler;
+        varying vec2 v_TextCoord;
+        void main(){
+            gl_FragColor = texture2D(u_Sampler,v_TextCoord);
+            //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+        }    
+    </script>
+    <!--
+        绑定着色器程序并进行编译
+    -->
+    <!-- <script src="./node_modules/gl-matrix/gl-matrix.js"></script> -->
+    <script type="module">
+        import {initShaders} from "../Utils/LoadShader.js";
+        import { Matrix4 } from "https://unpkg.com/three/build/three.module.js"; // 引用three的库
+
+       
+       
+        // 获取canvas 画布
+        const canvas = document.querySelector('canvas'); // 返回文档中具有指定 CSS 选择器的第一个元素
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        console.log(canvas.width,canvas.height);
+        // 二维画笔
+        // const gl = canvas.getContext('2d');
+        // 使用canvas 获取webgl绘图上下文, 三维画笔 
+
+        // vulkan
+        const gl = canvas.getContext('webgl');
+        const vsSourceStr = document.querySelector('#VertexShader').innerText;
+        const fsSourceStr = document.querySelector('#FragmentShader').innerText;
+        // 初始化着色器
+       if (!initShaders(gl,vsSourceStr,fsSourceStr))
+       {
+            console.log("initShader error")
+            alert('初始化Shader失败');
+       }
+       else
+       {
+            var verteices = new Float32Array(
+                [
+                    // 位置，纹理
+                    -0.5,0.5,0.0,1.0,
+                    -0.5,-0.5,0.0,0.0,
+                    0.5,0.5,1.0,1.0,
+                    0.5,-0.5,1.0,0.0,
+                ]
+            );
+            gl.clearColor(0.0,0.0,0.0,1.0);
+            var FSize = verteices.BYTES_PER_ELEMENT;
+            var vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER,verteices,gl.STATIC_DRAW);
+            var aPostion = gl.getAttribLocation(gl.program,'a_Position');
+            gl.vertexAttribPointer(aPostion,2,gl.FLOAT,false,FSize*4,0);
+            var a_TextCoord = gl.getAttribLocation(gl.program,'a_TextCoord');
+            gl.vertexAttribPointer(a_TextCoord,2,gl.FLOAT,false,FSize*4,FSize*2);
+            gl.enableVertexAttribArray(aPostion);
+            gl.enableVertexAttribArray(a_TextCoord);
+
+            InitTextures(gl);
+            
+       }
+       function InitTextures(webgl)
+        {
+            var texture = webgl.createTexture();
+            //开启0号纹理单元
+            webgl.activeTexture(webgl.TEXTURE0);
+         //向target绑定纹理对象
+            webgl.bindTexture(webgl.TEXTURE_2D, texture);
+            var image = new Image();
+            image.src = "wall.jpg";
+            image.onload = function(){
+                var u_Sampler = webgl.getUniformLocation(webgl.program,'u_Sampler');
+               
+               webgl.generateMipmap(webgl.TEXTURE_2D);
+               webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_NEAREST);
+              //  webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGB, webgl.RGB, webgl.UNSIGNED_BYTE, image);
+                webgl.uniform1i(u_Sampler,0);
+                
+                webgl.clear(webgl.COLOR_BUFFER_BIT);
+                webgl.drawArrays(webgl.TRIANGLE_STRIP,0,4);
+                //  // 创建纹理对象
+                
+                // // 获取纹理的存储位置
+                // var u_Sampler = webgl.getUniformLocation(webgl.program, 'u_Sampler');
+                // //对纹理进行Y轴反转
+                // webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 1);
+         
+                // //配置纹理参数
+                // webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+                // // webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+                // // webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
+                // //配置纹理图像
+                // webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGB, webgl.RGB, webgl.UNSIGNED_BYTE, image);
+                // //将0号纹理传递给着色器
+                // webgl.uniform1i(u_Sampler, 0);
+                
+                //绘图
+                webgl.clear(webgl.COLOR_BUFFER_BIT);
+                webgl.drawArrays(webgl.TRIANGLE_STRIP, 0, 4);
+            };
+
+            
+            // var texture = gl.createTexture();
+            // gl.activeTexture(gl.TEXTURE0); 
+            // gl.bindTexture(gl.TEXTURE_2D, texture);
+            // var image = new Image();
+            // image.src = "wall.jpg";
+            
+            // image.onload = function(){
+            //     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+            //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            //     var u_Sampler = gl.getUniformLocation(gl.program,'u_Sampler');
+            //     gl.uniform1i(u_Sampler,0);
+            //     gl.clear(gl.COLOR_BUFFER_BIT);
+            //     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+            // };
+
+   
+        }
+       function loadTexture(gl,texture,u_Sampler,image)
+        {
+            console.log('loadTexture');
+            // 对纹理进行Y轴翻转,WEBGL纹理坐标系统的t轴的方向和PNG、BMP、JPG等格式图片的坐标系统的Y轴方向是相反的。（或者在着色器中进行翻转）
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,1); 
+            // 开启0号纹理单元
+            gl.activeTexture(gl.TEXTURE0); //使用纹理单元时需要激活
+            // 告诉WEBGL系统纹理对象使用的是哪种纹理
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+         
+            // 配置纹理填充方式
+            //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+
+               // 将纹理图像分配给纹理对象
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+
+           // gl.generateMipmap(gl.TEXTURE_2D);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+
+            gl.uniform1i(u_Sampler,0);
+        }
+      
+    </script>
+</body>
+</html>
