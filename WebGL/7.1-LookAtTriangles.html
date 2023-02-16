@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>LookAt Triangles</title>
+  </head>
+  <body>
+    <script type = 'module'>
+      import { main } from './Js/7.1-LookAtTriangel.js'
+      main();
+    </script>
+    <script id = 'VertexShader' type = 'x-shader/x-vertex'>
+          attribute vec4 a_Position;
+          attribute vec4 a_Color;
+          uniform mat4 u_ViewMatrix;
+          varying vec4 v_Color;
+          void main()
+          {
+              gl_Position = u_ViewMatrix * a_Position;
+              //gl_Position = a_Position;
+              v_Color = a_Color;
+          }
+  
+    </script>
+    <script id ='FragmentShader' type = 'x-shader/x-fragment'>
+      precision mediump float;
+      varying vec4 v_Color;
+      void main()
+      {
+          gl_FragColor = v_Color;
+      }    
+  </script>
+  </body>
+</html>

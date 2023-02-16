@@ -1,6 +1,6 @@
 
 import {initShaders} from "../Utils/LoadShader.js"
-import { Matrix4 } from "https://unpkg.com/three/build/three.module.js"
+import { Matrix4,Vector3 } from "https://unpkg.com/three/build/three.module.js"
 
 var g_u1 = false,g_u0 = false;
 function main()
@@ -8,8 +8,6 @@ function main()
     
     var gl = CreateCanvas();
     gl.clearColor(0.0,0.0,0.0,1.0);
-    var imgurl = "../img/wall.jpg";
-    var imgFlower = "../img/redflower.jpg";
     const vsSourceStr = document.querySelector('#VertexShader').innerText;
     const fsSourceStr = document.querySelector('#FragmentShader').innerText;
     if (!initShaders(gl,vsSourceStr,fsSourceStr))
@@ -17,20 +15,9 @@ function main()
         console.log("initShader error")
         return;
     }
-    MakeShader(gl);
-    LoadImg(imgurl)
-        .then( (e) => {
-            MakeTexture(gl,e,0);
-        });
-    LoadImg(imgFlower)
-        .then(function(e){
-            MakeTexture(gl,e,1);
-        });
-    //问题：纹理加载失败导致黑屏？ 因为图片是异步加载，所以在这里调用画图是调用画图时纹理还没加载成功.
-        // if(g_u0 && g_u1) 
-        // {
-        //     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-        // }  
+    MakeShaderThree(gl);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES,0,9);
 };
 
 function GetVertexData()
@@ -41,10 +28,27 @@ function GetVertexData()
         //  -0.5,-0.5, 0.0,0.0,
         //   0.5,-0.5, 1.0,0.0,
         //   0.5, 0.5,  1.0,1.0,  
-        -1.0 ,1.0,   0.0, 1.0,    0.0, 1.0,
-        -1.0 ,-1.0,  0.0, 0.0,    0.0, 0.0, 
-        1.0 ,1.0,    1.0, 1.0,    1.0,  1,
-        1.0 ,-1.0,   1.0, 0.0,    1.0, 0.0,
+        -0.5 ,0.5,   0.0, 1.0,    0.0, 1.0,
+        -0.5 ,-0.5,  0.0, 0.0,    0.0, 0.0, 
+        0.5 ,0.5,    1.0, 1.0,    1.0,  1,
+        0.5 ,-0.5,   1.0, 0.0,    1.0, 0.0,
+    ]);
+}
+
+function GetVertexDataThree()
+{
+    return new Float32Array([
+        0.0 ,0.5,   -0.4, 0.4,    1.0, 0.4,
+        -0.5 ,-0.5,  -0.4,  0.4,   1.0, 0.4,
+        0.5 ,-0.5,   -0.4, 1.0,    0.4, 0.4,
+
+        0.5 ,0.4,   -0.2, 1.0,    0.4, 0.4,
+        -0.5 ,0.4,  -0.2,  1.0,   1.0, 0.4,
+        0.0 ,-0.6,   -0.2, 1.0,    1.0, 0.4,
+
+        0.0 ,0.5,   0.0, 0.4,    0.4, 1.0,
+        -0.5 ,0.5,  0.0,  0.4,   0.4, 1.0,
+        0.5 ,-0.5,   0.0, 1.0,    0.4, 0.4,
     ]);
 }
 
@@ -72,9 +76,41 @@ function CreateCanvas()
     const gl = canvas.getContext('webgl');
     return gl;
 }
+
+/**  @param {!WebGLRenderingContext} gl */ 
+function MakeShaderThree(gl)
+{
+    console.log('Make ShaderThree')
+    const vertexData =  GetVertexDataThree();
+    var FSIZE = vertexData.BYTES_PER_ELEMENT;
+   // var nCount = vertexData / FSIZE 
+    var vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,vertexData,gl.STATIC_DRAW);
+    var a_Position =  gl.getAttribLocation(gl.program ,'a_Position');
+    gl.vertexAttribPointer(a_Position,3,gl.FLOAT,false,FSIZE*6,0);
+    var a_Color  = gl.getAttribLocation(gl.program,'a_Color');
+    gl.vertexAttribPointer(a_Color,3,gl.FLOAT,false,FSIZE* 6,FSIZE * 3);
+
+    gl.enableVertexAttribArray(a_Position);
+    gl.enableVertexAttribArray(a_Color);
+
+    var u_ViewMatrix = gl.getUniformLocation(gl.program,'u_ViewMatrix');
+    var matrix4 = new Matrix4();
+    // lookAt ( eye : Vector3, target : Vector3, up : Vector3 ) 
+    console.log(matrix4.elements);
+    //matrix4.lookAt(new Vector3(0.2,0.25,0.25),new Vector3(0,0,0),new Vector3(0,1,0));
+    //console.log(matrix4.elements);
+    gl.uniformMatrix4fv(u_ViewMatrix,false,matrix4.elements);
+
+
+}
+
+
 /**  @param {!WebGLRenderingContext} gl */ 
 function MakeShader(gl)
 {
+    console.log('make shader')
     const vertexData = GetVertexData();
     var FSIZE = vertexData.BYTES_PER_ELEMENT;
    // var nCount = vertexData / FSIZE 
@@ -83,16 +119,18 @@ function MakeShader(gl)
     gl.bufferData(gl.ARRAY_BUFFER,vertexData,gl.STATIC_DRAW);
     var a_Position =  gl.getAttribLocation(gl.program ,'a_Position');
     gl.vertexAttribPointer(a_Position,2,gl.FLOAT,false,FSIZE*6,0);
-    var a_Color = gl.getAttribLocation(gl.program,'a_TextCoord');
-    gl.vertexAttribPointer(a_Color,2,gl.FLOAT,false,FSIZE*6,FSIZE*2);
+    var a_Color  = gl.getAttribLocation(gl.program,'a_Color');
+    gl.vertexAttrib4f(a_Color,1.0,0.0,0.0,1.0);
 
-    var a_FlowerTex = gl.getAttribLocation(gl.program,'a_FlowerCoord');
-    gl.vertexAttribPointer(a_FlowerTex,2,gl.FLOAT,false,FSIZE*6,FSIZE*4);
+    var u_ViewMatrix = gl.getUniformLocation(gl.program,'u_ViewMatrix');
+    var matrix4 = new Matrix4();
+    // lookAt ( eye : Vector3, target : Vector3, up : Vector3 ) 
+    console.log(matrix4.elements);
+    matrix4.lookAt(new Vector3(0.0,0.0,1.0),new Vector3(1,0,0),new Vector3(0,1,0));
+    //console.log(matrix4.elements);
+    gl.uniformMatrix4fv(u_ViewMatrix,false,matrix4.elements);
 
     gl.enableVertexAttribArray(a_Position);
-    //  这里一定要启用，否则拿不到纹理，漏了这句代码，这个问题找了好久。
-    gl.enableVertexAttribArray(a_Color);
-    gl.enableVertexAttribArray(a_FlowerTex);
 }
 
 /** @param {!WebGLRenderingContext} gl  */
