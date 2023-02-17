@@ -3,6 +3,7 @@ import {initShaders} from "../Utils/LoadShader.js"
 import { Matrix4,Vector3 } from "https://unpkg.com/three/build/three.module.js"
 
 var g_u1 = false,g_u0 = false;
+var matrix4 = new Matrix4();
 function main()
 {
     
@@ -15,9 +16,23 @@ function main()
         console.log("initShader error")
         return;
     }
+
+    // document.onkeydown(function(ev,gl)
+    // {
+    //     if(ev.keyCode = 37)
+    //     {
+    //         // 左键
+    //     }else if(ev.keyCode ==39)
+    //     {   
+    //         // 右键
+    //     }else 
+    //         return;
+    // });
+
     MakeShaderThree(gl);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES,0,9);
+    OnKeyBoard(gl);
 };
 
 function GetVertexData()
@@ -47,7 +62,7 @@ function GetVertexDataThree()
         0.0 ,-0.6,   -0.2, 1.0,    1.0, 0.4,
 
         0.0 ,0.5,   0.0, 0.4,    0.4, 1.0,
-        -0.5 ,0.5,  0.0,  0.4,   0.4, 1.0,
+        -0.5 ,-0.5,  0.0,  0.4,   0.4, 1.0,
         0.5 ,-0.5,   0.0, 1.0,    0.4, 0.4,
     ]);
 }
@@ -76,7 +91,7 @@ function CreateCanvas()
     const gl = canvas.getContext('webgl');
     return gl;
 }
-
+var eyeVec3 = new Vector3(0.2,0.25,0.25);
 /**  @param {!WebGLRenderingContext} gl */ 
 function MakeShaderThree(gl)
 {
@@ -96,11 +111,17 @@ function MakeShaderThree(gl)
     gl.enableVertexAttribArray(a_Color);
 
     var u_ViewMatrix = gl.getUniformLocation(gl.program,'u_ViewMatrix');
-    var matrix4 = new Matrix4();
+    //var matrix4 = new Matrix4();
     // lookAt ( eye : Vector3, target : Vector3, up : Vector3 ) 
-    console.log(matrix4.elements);
     //matrix4.lookAt(new Vector3(0.2,0.25,0.25),new Vector3(0,0,0),new Vector3(0,1,0));
     //console.log(matrix4.elements);
+
+    // makeOrthographic ( left : Float, right : Float, top : Float, bottom : Float, near : Float, far : Float ) : this
+
+    matrix4.lookAt(eyeVec3,new Vector3(0,0,0),new Vector3(0,1,0));
+
+    // matrix4.rotato();
+
     gl.uniformMatrix4fv(u_ViewMatrix,false,matrix4.elements);
 
 
@@ -188,4 +209,55 @@ function loadTexture(gl,texture,u_Sampler,image)
     gl.uniform1i(u_Sampler,0);
 }
 
+
+function OnKeyLeft(gl,flg)
+{
+    eyeVec3.x += flg;
+    console.log(eyeVec3);
+    var u_ViewMatrix = gl.getUniformLocation(gl.program,'u_ViewMatrix');
+    matrix4.lookAt(eyeVec3,new Vector3(0,0,0),new Vector3(0,1,0));
+    
+    gl.uniformMatrix4fv(u_ViewMatrix,false,matrix4.elements);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES,0,9);
+}
+
+function OnKeyBoard(gl)
+{
+
+
+
+    var f = 0.01;
+    document.addEventListener('keydown', (event) => {
+        const keyName = event.key;
+      
+        if (keyName === 'ArrowLeft') 
+        {
+            console.log('move left 0.01');
+            OnKeyLeft(gl,f);
+        }
+        else if(keyName === 'ArrowRight')
+        {
+            OnKeyLeft(gl,-f);
+        }
+      
+        // if (event.ctrlKey) {
+        //   // Even though event.key is not 'Control' (e.g., 'a' is pressed),
+        //   // event.ctrlKey may be true if Ctrl key is pressed at the same time.
+        //   console.log(`Combination of ctrlKey + ${keyName}`);
+        // } else {
+        //     console.log(`Key pressed ${keyName}`);
+        // }
+      }, false);
+      
+//       document.addEventListener('keyup', (event) => {
+//         const keyName = event.key;
+      
+//         // As the user releases the Ctrl key, the key is no longer active,
+//         // so event.ctrlKey is false.
+//         if (keyName === 'Control') {
+//             console.log('Control key was released');
+//         }
+//       }, false);
+ }
 export { main }
