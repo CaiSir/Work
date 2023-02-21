@@ -128,6 +128,7 @@
             var image = new Image();
             image.src = "wall.jpg";
             image.onload = function(){
+                
                 var u_Sampler = webgl.getUniformLocation(webgl.program,'u_Sampler');
                
                webgl.generateMipmap(webgl.TEXTURE_2D);

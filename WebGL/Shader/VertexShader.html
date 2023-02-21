@@ -28,4 +28,74 @@
                 gl_FragColor = u_Color;
             }    
     </script>
+    <script id ='FragmentShader1' type = 'x-shader/x-fragment'>
+        precision mediump float;
+        #define PI 3.1415926535897932384626433832795
+
+        uniform sampler2D uSampler;
+        uniform sampler2D uSource;
+
+        uniform float uRotate;
+        uniform float uTop;
+        uniform float uScale;
+
+        uniform float uDiff;
+
+        varying mediump vec4 vDirection;
+
+        mediump vec4 samplerColor(mediump vec3 direction){
+            mediump float theta = atan(direction.x, -1.0 * direction.z);
+            mediump float phi = atan(direction.y, length(direction.xz));
+            if (abs(direction.x) < 1e-4 * abs(direction.z))
+            theta = 0.5 * PI * (1.0 - sign(-1.0 * direction.z));
+            if (abs(direction.y) < 1e-4 * length(direction.xz))
+                phi = 0.0;
+
+            float radio = 9.5 / 3.5 ;
+            float base = uScale;
+            float left = 3.;
+            float top = uTop;
+            float dy = (phi / PI + 0.5)* base-top;
+            if(dy >1.||dy < 0.){
+            return vec4(0.,1.,0.,1.);
+            }
+            float dx=(mod(theta / (2.0*PI), 1.0))*base*radio-left;
+            if(dx >1. || dx < 0.){
+            return vec4(0.,1.,0.,1.);
+        }
+        return texture2D(uSampler,vec2(dx,dy));
+        }
+     mediump vec4 sourceColor(mediump vec3 direction){
+
+     mediump float theta = atan(direction.x, -1.0 * direction.z);
+     mediump float phi = atan(direction.y, length(direction.xz));
+
+        if (abs(direction.x) < 1e-4 * abs(direction.z))
+        theta = 0.5*PI * (1.0 - sign(-1.0 * direction.z));
+        if (abs(direction.y) < 1e-4 * length(direction.xz))
+        phi = 0.0;
+        float dx=mod(theta / (2.0*PI), 1.0);
+        float dy=phi / PI + 0.5;
+        dx+=uRotate;
+        if(dx>1.){
+        dx-=1.;
+     }
+
+    return texture2D(uSource,vec2(dx,dy));
+    }
+
+    void main() {
+        mediump vec3 direction = vec3(vDirection.xyz/ vDirection.w);
+
+        float diff= uDiff;
+        float left=.45;
+
+        vec4 sourcePixel = sourceColor(direction);
+
+        vec4 extraPixel = samplerColor(direction);
+        vec4 outExtraPixel = extraPixel;
+        if(vDirection.x+left<0.){
+            outE
+    }
+    </script>
 </body>

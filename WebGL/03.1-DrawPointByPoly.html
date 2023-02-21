@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="UTF-8">
+    <title>ImportColor</title>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+        #canvas{
+            background-color: antiquewhite;
+        }
+    </style>
+</head>
+<body>
+    <canvas id = "canvas"></canvas>
+
+    <!-- 
+        指定type属性的理由
+        type属性指定了［x-shader/x-vertex］和［x-shader/x-fragment］，这并不是HTML中定义的正式的写法。
+        但是一般的浏览器如果遇到不识别的标签的话会无视掉的，浏览器不会认为这是javascript代码的。
+        浏览器只会把它当成无意义的字符串，而程序中则可以使用标签里面的内容。 
+        也就是：浏览器就不会认为这是一个单独的新的script标签（js文件），而是一段用script首尾标签包含起来的普通字符串文本
+
+
+        另一个，也可以不使用script标签来做。
+        主要是因为着色器的代码就是简单的字符串，可以直接在javascript内部定义字符串。
+        这样的话，着色器被定义在了javascript文件中，HTML的代码就变的简单多了    
+    -->
+    <script id = 'VertexShader' type = 'x-shader/x-vertex'>
+        attribute vec4 a_Postion;
+        attribute float a_pointSize; 
+        void main(){
+            gl_Position = a_Postion;
+            gl_PointSize = 30.0;
+        }
+    </script>
+    <script id ='FragmentShader' type = 'x-shader/x-fragment' >
+        void main(){
+            gl_FragColor = vec4(1.0,1.0,0.0,1.0);
+        }    
+    </script>
+    <!--
+        绑定着色器程序并进行编译
+    -->
+    <script type="module">
+        //import{ Color } from "https://unpkg.com/three/build/three.module.js"
+        import {initShaders} from "../Utils/LoadShader.js"
+        import {Poly} from "../Utils/Poly.js"
+        // 获取canvas 画布
+        const canvas = document.querySelector('canvas'); // 返回文档中具有指定 CSS 选择器的第一个元素
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        console.log(canvas.width,canvas.height);
+        // 二维画笔
+        // const gl = canvas.getContext('2d');
+        // 使用canvas 获取webgl绘图上下文, 三维画笔 
+
+        // vulkan
+        const gl = canvas.getContext('webgl');
+
+        const vsSourceStr = document.querySelector('#VertexShader').innerText;
+        const fsSourceStr = document.querySelector('#FragmentShader').innerText;
+        // 初始化着色器
+       if (!initShaders(gl,vsSourceStr,fsSourceStr))
+       {
+            console.log("initShader error")
+            alert('初始化Shader失败');
+       }
+       else
+       {
+            gl.clearColor(0.0,0.0,0.0,1);
+            const pl = new Poly({
+                gl,
+                vertices:[0,0.2]}
+                );
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            pl.draw();
+
+            setTimeout(() => {
+                pl.addVertice(0.2,0.5);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                pl.draw();
+            }, 1000);
+
+            setTimeout(() => {
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                pl.draw(['POINTS','LINE_STRIP']);
+            }, 2000);
+       }
+    </script>
+</body>
+
+</html>
