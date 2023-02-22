@@ -44,4 +44,21 @@ function initShaders(gl, vsSource, fsSource) {
             return shader;
         }
 
-export {initShaders}
+
+        // 线性比例尺  线性方程   y = ax + b;
+        function  ScaleLinear(ax,ay,bx,by)
+        {
+            const delta = {
+                x:bx-ax,
+                y:by-ay,
+            };
+            const k = delta.y /delta.x;
+            const b = ay -  ax*k;
+            return function(x)
+            {
+                return k*x + b;
+            }
+        }
+
+
+export {initShaders,ScaleLinear}
