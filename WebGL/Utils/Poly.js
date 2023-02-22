@@ -113,4 +113,4 @@ export default class Poly{
 
 }
 
-export {Poly}
+export { Poly }
