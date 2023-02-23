@@ -1,14 +1,16 @@
 
 // 封装画多边形对象。
-const defAttr = () =>({
+const defAttr= () =>({
     gl:null,
     vertices :[],  // 顶点数据对象
     geoData:[],    // 模型数据，对象数据，可解析出vertices顶点数据
     size :2,       // 顶点分量的数目
     attrName :"a_Position",
-    uniforms:{},     // 使用{} 代表对象的初始化
     count:0,        // 顶点个数
-    types:['POINTS']   // 绘图方式
+    types:['POINTS'],   // 绘图方式
+    attributes:{},
+    uniforms:{},     // 使用{} 代表对象的初始化
+
 })
 
 export default class Poly{
@@ -17,6 +19,7 @@ export default class Poly{
         Object.assign(this,defAttr(),attr);
         this.init();
     }
+   
 
     init()
     {

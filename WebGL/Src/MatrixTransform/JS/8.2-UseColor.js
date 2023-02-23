@@ -24,12 +24,12 @@ function main()
     // const viewMatrix = new Matrix4();
     /* x,z 方向的空间坐标极值 */
     const [minPosX,maxPosX,minPosZ,maxPosZ] = [
-        -1,1,-1, 1
+        -0.7,0.8,-1, 1
     ]
    
     // x,z方向的弧度极值
     const [minAngX,maxAngX,minAngZ,maxAngZ] = [
-        0, Math.PI * 2, 0, Math.PI * 0.5
+        0, Math.PI * 4, 0, Math.PI * 2 
     ]
 
     const scalerX = ScaleLinear(minPosX,minAngX,maxPosX,maxAngX);
@@ -52,8 +52,8 @@ function main()
     wave.draw();
 
     var offset = 0;
-    !(function ani(){
-        offset += 0.01;
+    (function ani(){
+        offset += 0.03;
         updateVertices(offset)
         wave.updateBuffer();
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -66,9 +66,9 @@ function main()
     {
         var vertices = [];
         // 创建点信息
-        for (let z = minPosZ ; z < maxPosZ ;z +=0.1)
+        for (let z = minPosZ ; z < maxPosZ ;z +=0.03)
         {
-            for(let x = minPosX;x < maxPosX ; x+=0.1)
+            for(let x = minPosX;x < maxPosX ; x+=0.03)
             {
                 vertices.push(x,0,z);
             }
@@ -83,12 +83,12 @@ function main()
         for(let i = 0; i < vertices.length ; i +=3)
         {
             const [posX,posZ] = [vertices[i],vertices[i+2]]
-            const angZ = scalerZ(posZ);
+            const angZ = scalerZ(posZ); // Z位置对应的弧度
             const Omega = 2;
-            // const a = 0.05;
-            // const phi  = 0;
-            const a = Math.sin(angZ) * 0.1+ 0.3;
-            const phi = scalerX(posX) + offset;
+            //const a = 0.05;
+            //const phi  = 0;
+            const a = Math.sin(angZ) * 0.05 + 0.03; // 影响波动幅度
+            const phi = scalerX(posX) + offset;     // X轴的偏移值
             vertices[i+1] = SinFn(a,Omega,phi)(angZ);
             
         }
