@@ -52,7 +52,7 @@ function main()
     wave.draw();
 
     var offset = 0;
-    (function ani(){
+    !(function ani(){
         offset += 0.03;
         updateVertices(offset)
         wave.updateBuffer();
