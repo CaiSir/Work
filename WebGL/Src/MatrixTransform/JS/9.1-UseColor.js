@@ -67,64 +67,21 @@ function main()
             },
         },
         attributes:{
-            a_Position,
-            a_Color,
+            a_Position:a_Position,
+            a_Color:a_Color,
         },
  
     });
-    //updateSource();
+    updateSource();
     render();
 
-    const  offset = 0;
+    var  offset = 0;
     !(function ani(){
-        offset += 0.08;
+        offset += 0.03;
         updateSource(offset)
         render();
         requestAnimationFrame(ani);
     })()
-
-    // var offset = 0;
-    // !(function ani(){
-    //     offset += 0.03;
-    //     updateVertices(offset)
-    //     wave.updateBuffer();
-    //     gl.clear(gl.COLOR_BUFFER_BIT);
-    //     wave.draw();
-    //     requestAnimationFrame(ani);
-    // })()
-    
-    // function crtVertices(offset = 0)
-    // {
-    //     var vertices = [];
-    //     // 创建点信息
-    //     for (let z = minPosZ ; z < maxPosZ ;z +=0.03)
-    //     {
-    //         for(let x = minPosX;x < maxPosX ; x+=0.03)
-    //         {
-    //             vertices.push(x,0,z);
-    //         }
-    //     }
-    //     return vertices;
-    // }
-
-    
-    // function updateVertices(offset = 0)
-    // {
-    //     const { vertices } = wave
-    //     for(let i = 0; i < vertices.length ; i +=3)
-    //     {
-    //         const [posX,posZ] = [vertices[i],vertices[i+2]]
-    //         const angZ = scalerZ(posZ); // Z位置对应的弧度
-    //         const Omega = 2;
-    //         //const a = 0.05;
-    //         //const phi  = 0;
-    //         const a = Math.sin(angZ) * 0.05 + 0.03; // 影响波动幅度
-    //         const phi = scalerX(posX) + offset;     // X轴的偏移值
-    //         vertices[i+1] = SinFn(a,Omega,phi)(angZ);
-            
-    //     }
-
-    // }
 
     function getSource(cols,rows,minPosX,maxPosX,minPosZ,maxPosZ)
     {
@@ -137,7 +94,7 @@ function main()
             {
                 const px = x * spaceX + minPosX;
                 const pz = z * spaceZ + minPosZ;
-                source.push(px,0, pz ,1,1,1,1);
+                source.push(px,0, pz ,1,0,0,1);
             }
         }
         return source;
@@ -158,9 +115,9 @@ function main()
             source[i+1] = y;
             const h = scalerC(y);
             const {r,g,b} = color.setHSL(h,1,0.6);
-            source[1+3] = r;
-            source[1+4] = g;
-            source[1+5] = b;
+            source[i+3] = r;
+            source[i+4] = g;
+            source[i+5] = b;
         }
 
     }
@@ -178,8 +135,10 @@ function main()
 
     function render()
     {
+        wave.updateAttribute();
         gl.clear(gl.COLOR_BUFFER_BIT);
-        wave.draw();
+       // wave.draw();
+        wave.draw('LINES');
     }
  
 };

@@ -70,6 +70,13 @@ export default class PolyEx{
         }
     }
 
+    updateBuffer(...params) {
+        const {gl,source} = this; 
+        this.calculateSize();
+        gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(source),gl.STATIC_DRAW);
+        this.updateUniform();
+    }
+    
     draw(type = this.type)
     {
         const {gl,sourceSize} = this;
