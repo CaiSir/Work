@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>9.2旋转的魔方</title>
+  </head>
+  <body>
+    <script type = 'module'>
+      import { main } from './JS/9.2-mofang.js'
+      main();
+    </script>
+    <script id = 'VertexShader' type = 'x-shader/x-vertex'>
+          attribute vec4 a_Position;
+          attribute vec2 a_TextCoord;
+          uniform mat4 u_ModelMatrix;
+          varying vec2 v_TextCoord;
+          void main()
+          {
+              gl_Position = u_ModelMatrix * a_Position;
+              gl_PointSize = 1.0;
+              v_TextCoord = a_TextCoord;
+          }
+  
+    </script>
+    <script id ='FragmentShader' type = 'x-shader/x-fragment'>
+      precision mediump float;
+      uniform sampler2D u_Sampler;
+      varying vec2 v_TextCoord;
+      void main()
+      {
+          gl_FragColor = texture(u_Sampler,v_TextCoord);
+      }    
+  </script>
+  </body>
+</html>

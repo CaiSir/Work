@@ -77,7 +77,7 @@ function main()
 
     var  offset = 0;
     !(function ani(){
-        offset += 0.03;
+        offset += 0.01;
         updateSource(offset)
         render();
         requestAnimationFrame(ani);
@@ -85,7 +85,7 @@ function main()
 
     function getSource(cols,rows,minPosX,maxPosX,minPosZ,maxPosZ)
     {
-        const source =[];
+        const source = [];
         const spaceZ = (maxPosZ - minPosZ )/rows;
         const spaceX = (maxPosX- minPosX) /cols;
         for(let z = 0 ; z < rows; z++)
@@ -94,7 +94,7 @@ function main()
             {
                 const px = x * spaceX + minPosX;
                 const pz = z * spaceZ + minPosZ;
-                source.push(px,0, pz ,1,0,0,1);
+                source.push(px,0, pz ,1,1,1,1);
             }
         }
         return source;
@@ -138,6 +138,7 @@ function main()
         wave.updateAttribute();
         gl.clear(gl.COLOR_BUFFER_BIT);
        // wave.draw();
+       // wave.draw('LINES');
         wave.draw('LINES');
     }
  

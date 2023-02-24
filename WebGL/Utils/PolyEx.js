@@ -12,6 +12,19 @@ const defAttr = () =>({
     uniforms:{},     
     
 })
+/*attributes:{
+    key:{
+            size:3,
+            index:0
+        },
+    }
+    uniforms:{
+        key:{
+            type:'',
+            value:''
+        }
+    }
+*/
 
 export default class PolyEx{
     constructor(attr)
