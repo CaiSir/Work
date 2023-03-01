@@ -17,7 +17,7 @@
           void main()
           {
               gl_Position = u_ModelMatrix * a_Position;
-              gl_PointSize = 1.0;
+              gl_PointSize = 10.0;
               v_TextCoord = a_TextCoord;
           }
   
@@ -28,7 +28,8 @@
       varying vec2 v_TextCoord;
       void main()
       {
-          gl_FragColor = texture(u_Sampler,v_TextCoord);
+         gl_FragColor = texture2D(u_Sampler,v_TextCoord);
+         //gl_FragColor = vec4(1.0,1.0,0.0,1.0);
       }    
   </script>
   </body>

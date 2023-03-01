@@ -118,27 +118,26 @@
             InitTextures(gl);
             
        }
-       function InitTextures(webgl)
+       function InitTextures(gl)
         {
-            var texture = webgl.createTexture();
+            var texture = gl.createTexture();
             //开启0号纹理单元
-            webgl.activeTexture(webgl.TEXTURE0);
+            gl.activeTexture(gl.TEXTURE0);
          //向target绑定纹理对象
-            webgl.bindTexture(webgl.TEXTURE_2D, texture);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
             var image = new Image();
             image.src = "wall.jpg";
             image.onload = function(){
                 
-                var u_Sampler = webgl.getUniformLocation(webgl.program,'u_Sampler');
-               
-               webgl.generateMipmap(webgl.TEXTURE_2D);
-               webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_NEAREST);
-              //  webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.);
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGB, webgl.RGB, webgl.UNSIGNED_BYTE, image);
-                webgl.uniform1i(u_Sampler,0);
+                var u_Sampler = gl.getUniformLocation(gl.program,'u_Sampler');
+                gl.generateMipmap(gl.TEXTURE_2D);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+              //  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+                gl.uniform1i(u_Sampler,0);
                 
-                webgl.clear(webgl.COLOR_BUFFER_BIT);
-                webgl.drawArrays(webgl.TRIANGLE_STRIP,0,4);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
                 //  // 创建纹理对象
                 
                 // // 获取纹理的存储位置
@@ -156,8 +155,8 @@
                 // webgl.uniform1i(u_Sampler, 0);
                 
                 //绘图
-                webgl.clear(webgl.COLOR_BUFFER_BIT);
-                webgl.drawArrays(webgl.TRIANGLE_STRIP, 0, 4);
+                // gl.clear(gl.COLOR_BUFFER_BIT);
+                // gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
             };
 
             

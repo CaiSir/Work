@@ -1,24 +1,24 @@
-function initShaders(gl, vsSource, fsSource) {
+        function initShaders(gl, vsSource, fsSource) {
 
-    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+            const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
-    // 创建着色器程序
+            // 创建着色器程序
 
-    const shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
+            const shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
 
-    // 创建失败，alert
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
-        return false;
-    }
-    gl.useProgram(shaderProgram);
-    gl.program = shaderProgram;
-    return true;
-}
+            // 创建失败，alert
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+                return false;
+            }
+            gl.useProgram(shaderProgram);
+            gl.program = shaderProgram;
+            return true;
+        }
 
         // 创建指定类型的着色器，上传 source 源码并编译
         //
@@ -60,5 +60,19 @@ function initShaders(gl, vsSource, fsSource) {
             }
         }
 
+        // 加载图片
+        function LoadImg(img)
+        {
+            return new Promise((resolve)=>
+            {
+                img.onload = () => { resolve(img) };
+            });
+        }
 
-export {initShaders,ScaleLinear}
+
+export 
+{
+    initShaders,
+    ScaleLinear,
+    LoadImg
+}
