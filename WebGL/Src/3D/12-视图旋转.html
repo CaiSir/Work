@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>视图旋转</title>
+  <link rel="icon" href="https://img.kaikeba.com/kkb_portal_icon.ico">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #canvas {
+      background-color: antiquewhite;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+  <!-- 顶点着色器 -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+      attribute vec4 a_Position;
+      uniform mat4 u_PvMatrix;
+      void main(){
+        gl_Position = u_PvMatrix*a_Position;
+      }
+  </script>
+  <!-- 片元着色器 -->
+  <script id="fragmentShader" type="x-shader/x-fragment">
+      precision mediump float;
+      uniform vec4 u_Color;
+      void main(){
+        gl_FragColor=u_Color;
+      }
+  </script>
+  <script type="module">
+    import { initShaders } from '../../../Utils/LoadShader.js';
+    import { Matrix4, Vector3, Quaternion, Object3D, OrthographicCamera } from 'https://unpkg.com/three/build/three.module.js';
+    import PolyEx from '/Utils/PolyEx.js'
+
+    const canvas = document.getElementById('canvas');
+    const [viewW, viewH] = [window.innerWidth, window.innerHeight]
+    canvas.width = viewW;
+    canvas.height = viewH;
+    console.log(viewW,viewH);
+    const gl = canvas.getContext('webgl');
+
+    const vsSource = document.getElementById('vertexShader').innerText;
+    const fsSource = document.getElementById('fragmentShader').innerText;
+    initShaders(gl, vsSource, fsSource);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    const halfH = 2
+    const ratio = 2
+    const halfW = halfH * ratio
+    console.log(halfW);
+    const [left, right, top, bottom, near, far] = [
+      -halfW, halfW, halfH, -halfH, -1, 4
+    ]
+
+    console.log(left, right, top, bottom, near, far);
+    const eye = new Vector3(-1, 0, 1)
+    const target = new Vector3(-2, 0, 0)
+    const up = new Vector3(0, 1, 0)
+
+    //正交相机
+    const camera = new OrthographicCamera(
+      left, right, top, bottom, near, far
+    )
+/* 
+    计算正交投影视图矩阵
+
+    1、 位移矩阵
+    const positionMatrix = new Matrix4().setPosition();
+    2、 旋转矩阵
+    cosnt rotationMatrix = new Matrix4().loolAt(eye,target,up);
+    3、 视图矩阵
+    const viewMatrix = new Matrix4().mutiplyMatrices(
+      positionMartrix,
+      rotationMatrix,
+    ).invert()   这里需要逆矩阵，因为这里是以摄像机为第一视角。
+    4、 投影矩阵
+    const projectMatrix = camera.projectMatrix;
+    5、 投影视图矩阵
+    const pvMatrix = new matrix().mutiplyMatrices(
+      projectMatrix,
+      viewMatrix,
+    )
+*/
+
+    camera.position.copy(eye)
+    var mar = camera.lookAt(target)
+    camera.updateWorldMatrix(true)
+
+    var dir = camera.getWorldDirection(target);
+
+    //投影视图矩阵
+    const pvMatrix = new Matrix4()
+      .multiplyMatrices(
+        camera.projectionMatrix,
+        camera.matrixWorldInverse
+      )
+
+
+    const triangle1 = crtTriangle(
+      [1, 0, 0, 1],
+      [
+        0, 0.3, -0.2,
+        - 0.3, -0.3, -0.2,
+        0.3, -0.3, -0.2
+      ]
+    )
+    const triangle2 = crtTriangle(
+      [1, 1, 0, 1],
+      [
+        0, 0.3, 0.2,
+        - 0.3, -0.3, 0.2,
+        0.3, -0.3, 0.2
+      ]
+    )
+
+    render()
+
+    function render() {
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      triangle1.init()
+      triangle1.draw()
+      triangle2.init()
+      triangle2.draw()
+    }
+
+    function crtTriangle(color, source) {
+      return new PolyEx({
+        gl,
+        source,
+        type: 'TRIANGLES',
+        attributes: {
+          a_Position: {
+            size: 3,
+            index: 0
+          },
+        },
+        uniforms: {
+          u_Color: {
+            type: 'uniform4fv',
+            value: color
+          },
+          u_PvMatrix: {
+            type: 'uniformMatrix4fv',
+            value: pvMatrix.elements
+          },
+        }
+      })
+    }
+  </script>
+</body>
+
+</html>

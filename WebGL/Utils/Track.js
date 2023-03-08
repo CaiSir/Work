@@ -4,11 +4,11 @@ export default class Track {
     this.target = target;
     this.parent = null;
     this.start = 0;
-    this.timeLen = 5;
+    this.timeLen = 5;    // 循环次数
     this.loop = false;
-    this.keyMap = new Map();
-    this.onEnd = () => { }
-    this.prevTime=0
+    this.keyMap = new Map(); 
+    this.onEnd = () => { }   // 循环结束时的回调事件
+    this.prevTime = 0
   }
   update(t) {
     const { keyMap, timeLen, target, loop, start,prevTime } = this;
@@ -33,6 +33,7 @@ export default class Track {
   }
 }
 
+// 通过设置的区间获取时间的线性插值
 function getValBetweenFms(time, fms, last) {
   for (let i = 0; i < last; i++) {
     const fm1 = fms[i];

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>视图旋转</title>
+  <link rel="icon" href="https://img.kaikeba.com/kkb_portal_icon.ico">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #canvas {
+      background-color: antiquewhite;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+  <!-- 顶点着色器 -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+    attribute vec4 a_Position;
+    uniform mat4 u_PvMatrix;
+    uniform mat4 u_ModelMatrix;
+    void main(){
+    	gl_Position = u_PvMatrix*u_ModelMatrix*a_Position;
+    }
+  </script>
+  <!-- 片元着色器 -->
+  <script id="fragmentShader" type="x-shader/x-fragment">
+      precision mediump float;
+      uniform vec4 u_Color;
+      void main(){
+        gl_FragColor=u_Color;
+      }
+  </script>
+  <script type="module">
+    import { initShaders } from '../../../Utils/LoadShader.js';
+    import {  Matrix4, Vector2, Vector3, Quaternion, Object3D,
+      OrthographicCamera, PerspectiveCamera } from 'https://unpkg.com/three/build/three.module.js';
+    import PolyEx from '/Utils/PolyEx.js'
+
+    const canvas = document.getElementById('canvas');
+    const [viewW, viewH] = [window.innerWidth, window.innerHeight]
+    canvas.width = viewW;
+    canvas.height = viewH;
+    const gl = canvas.getContext('webgl');
+
+    const vsSource = document.getElementById('vertexShader').innerText;
+    const fsSource = document.getElementById('fragmentShader').innerText;
+    initShaders(gl, vsSource, fsSource);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    const halfH = 2
+    const ratio = canvas.width / canvas.height
+    const halfW = halfH * ratio
+    const [left, right, top, bottom, near, far] = [
+      -halfW, halfW, halfH, -halfH, 1, 8
+    ]
+    const eye = new Vector3(1, 1, 2)
+    const target = new Vector3(0, 0, -3)
+    const up = new Vector3(0, 1, 0)
+
+    const camera = new OrthographicCamera(
+      left, right, top, bottom, near, far
+    )
+    console.log( left, right, top, bottom, near, far);
+    camera.position.copy(eye)
+    camera.lookAt(target)
+    camera.updateMatrixWorld()
+    const pvMatrix = new Matrix4()
+    pvMatrix.multiplyMatrices(
+      camera.projectionMatrix,
+      camera.matrixWorldInverse,
+    )
+
+
+    const triangle1 = crtTriangle(
+      [1, 0, 0, 1],
+      [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        -0.5, 0, -3, 1,
+      ]
+    )
+    const triangle2 = crtTriangle(
+      [1, 0, 0, 1],
+      new Matrix4().setPosition(0.5, 0, -3).elements
+    )
+
+    const triangle3 = crtTriangle(
+      [1, 1, 0, 1],
+      new Matrix4().setPosition(-0.5, 0, -2).elements
+    )
+
+    const triangle4 = crtTriangle(
+      [1, 1, 0, 1],
+      new Matrix4().setPosition(0.5, 0, -2).elements
+    )
+
+/*
+  button 点击事件对应的按键序号：0 为左键、1 为中键、2 为右键。在左撇子的配置环境下，按键值相反。
+
+  组合键的值就不一样了。
+  buttons 鼠标事件触发时按下的按键值：左键为 1，右键为 2，中键为 4，第四个（如浏览器返回键）为 8，
+  第五个（如浏览器前进键）为 16。若多个按键按下，则返回全部按下按键的逻辑值之和。例如，按下左键和右键时，返回 3 (= 1 | 2)。
+*/
+    /* 声明基础数据 */
+    const mouseButtons = new Map([
+      [0, 'pan']
+    ])
+    let state = 'none'
+
+    /* 平移轨道 */
+    const [dragStart, dragEnd] = [
+      new Vector2(),
+      new Vector2(),
+    ]
+    const panOffset = new Vector3()
+    const screenSpacePanning = true
+
+    //在canvas上绑定鼠标事件  禁止右键菜单
+    canvas.addEventListener('contextmenu', (event) => {
+      event.preventDefault()  
+    })
+    canvas.addEventListener('pointerdown', ({ clientX, clientY, button }) => {
+      dragStart.set(clientX, clientY)
+      console.log(button)
+      state = mouseButtons.get(button)
+    })
+    canvas.addEventListener('pointermove', (event) => {
+      switch (state) {
+        case 'pan':
+          handleMouseMovePan(event)
+          break
+      }
+    })
+    canvas.addEventListener('pointerup', (event) => {
+      state = 'none'
+    })
+
+    function handleMouseMovePan({ clientX, clientY }) {
+      dragEnd.set(clientX, clientY)
+      pan(dragEnd.clone().sub(dragStart))
+      dragStart.copy(dragEnd)
+    }
+
+    //平移方法
+    function pan({ x, y }) {
+      const { right, left, top, bottom, matrix, position, up } = camera
+      const { clientWidth, clientHeight } = canvas  // 画布宽高
+     // console.log( right, left, top, bottom, matrix, position, up);
+      const cameraW = right - left  
+      const cameraH = top - bottom
+      const ratioX = x / clientWidth
+      const ratioY = y / clientHeight
+      const distanceLeft = ratioX * cameraW
+      const distanceUp = ratioY * cameraH
+      const mx = new Vector3().setFromMatrixColumn(matrix, 0)
+      console.log(mx);
+      const vx = mx.clone().multiplyScalar(-distanceLeft)
+      console.log(vx);
+      const vy = new Vector3()
+      if (screenSpacePanning) {
+        // Y方向
+        vy.setFromMatrixColumn(matrix, 1)
+      } else {
+        // -z 方向
+        vy.crossVectors(up, mx)
+      }
+      vy.multiplyScalar(distanceUp)
+      panOffset.copy(vx.add(vy))
+      update()
+    }
+
+    function update() {
+      target.add(panOffset)
+   //   console.log(target);
+      camera.position.add(panOffset)
+      camera.lookAt(target)
+      camera.updateMatrixWorld(true)
+      pvMatrix.multiplyMatrices(
+        camera.projectionMatrix,
+        camera.matrixWorldInverse,
+      )
+      render()
+    }
+
+    render()
+
+    function render() {
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      triangle1.init()
+      triangle1.draw()
+      triangle2.init()
+      triangle2.draw()
+      triangle3.init()
+      triangle3.draw()
+      triangle4.init()
+      triangle4.draw()
+    }
+
+    function crtTriangle(color, modelMatrix) {
+      return new PolyEx({
+        gl,
+        source: [
+          0, 0.3, 0,
+          -0.3, -0.3, 0,
+          0.3, -0.3, 0,
+        ],
+        type: 'TRIANGLES',
+        attributes: {
+          a_Position: {
+            size: 3,
+            index: 0
+          },
+        },
+        uniforms: {
+          u_Color: {
+            type: 'uniform4fv',
+            value: color
+          },
+          u_PvMatrix: {
+            type: 'uniformMatrix4fv',
+            value: pvMatrix.elements
+          },
+          u_ModelMatrix: {
+            type: 'uniformMatrix4fv',
+            value: modelMatrix
+          }
+        }
+      })
+    }
+
+  </script>
+</body>
+
+</html>
