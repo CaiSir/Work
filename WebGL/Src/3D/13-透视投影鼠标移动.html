@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>视图旋转</title>
+  <title>透视平移</title>
   <link rel="icon" href="https://img.kaikeba.com/kkb_portal_icon.ico">
   <style>
     body {
@@ -63,18 +63,29 @@
     const target = new Vector3(0, 0, -3)
     const up = new Vector3(0, 1, 0)
 
-    const camera = new OrthographicCamera(
-      left, right, top, bottom, near, far
-    )
-    console.log( left, right, top, bottom, near, far);
-    camera.position.copy(eye)
-    camera.lookAt(target)
-    camera.updateMatrixWorld()
+    const camera = new PerspectiveCamera(30,ratio,1,8);
+    camera.position.copy(eye);
+    camera.lookAt(target);
+    camera.updateMatrixWorld();
     const pvMatrix = new Matrix4()
     pvMatrix.multiplyMatrices(
       camera.projectionMatrix,
       camera.matrixWorldInverse,
     )
+    
+
+    // const camera = new OrthographicCamera(
+    //   left, right, top, bottom, near, far
+    // )
+    // console.log( left, right, top, bottom, near, far);
+    // camera.position.copy(eye)
+    // camera.lookAt(target)
+    // camera.updateMatrixWorld()
+    // const pvMatrix = new Matrix4()
+    // pvMatrix.multiplyMatrices(
+    //   camera.projectionMatrix,
+    //   camera.matrixWorldInverse,
+    // )
 
 
     const triangle1 = crtTriangle(
@@ -126,11 +137,13 @@
     canvas.addEventListener('contextmenu', (event) => {
       event.preventDefault()  
     })
+    
     canvas.addEventListener('pointerdown', ({ clientX, clientY, button }) => {
       dragStart.set(clientX, clientY)
       console.log(button)
       state = mouseButtons.get(button)
     })
+
     canvas.addEventListener('pointermove', (event) => {
       switch (state) {
         case 'pan':
@@ -138,6 +151,7 @@
           break
       }
     })
+
     canvas.addEventListener('pointerup', (event) => {
       state = 'none'
     })
@@ -150,29 +164,30 @@
 
     //平移方法
     function pan({ x, y }) {
-      const { right, left, top, bottom, matrix, position, up } = camera
-      const { clientWidth, clientHeight } = canvas  // 画布宽高
-     // console.log( right, left, top, bottom, matrix, position, up);
-      const cameraW = right - left  
-      const cameraH = top - bottom
-      const ratioX = x / clientWidth
-      const ratioY = y / clientHeight
-      const distanceLeft = ratioX * cameraW
-      const distanceUp = ratioY * cameraH
-      const mx = new Vector3().setFromMatrixColumn(matrix, 0)
-      console.log(mx);
-      const vx = mx.clone().multiplyScalar(-distanceLeft)
-      console.log(vx);
-      const vy = new Vector3()
-      if (screenSpacePanning) {
-        // Y方向
-        vy.setFromMatrixColumn(matrix, 1)
-      } else {
-        // -z 方向
-        vy.crossVectors(up, mx)
-      }
-      vy.multiplyScalar(distanceUp)
-      panOffset.copy(vx.add(vy))
+
+    //   const { right, left, top, bottom, matrix, position, up } = camera
+    //   const { clientWidth, clientHeight } = canvas  // 画布宽高
+    //  // console.log( right, left, top, bottom, matrix, position, up);
+    //   const cameraW = right - left  
+    //   const cameraH = top - bottom
+    //   const ratioX = x / clientWidth
+    //   const ratioY = y / clientHeight
+    //   const distanceLeft = ratioX * cameraW
+    //   const distanceUp = ratioY * cameraH
+    //   const mx = new Vector3().setFromMatrixColumn(matrix, 0)
+    //   console.log(mx);
+    //   const vx = mx.clone().multiplyScalar(-distanceLeft)
+    //   console.log(vx);
+    //   const vy = new Vector3()
+    //   if (screenSpacePanning) {
+    //     // Y方向
+    //     vy.setFromMatrixColumn(matrix, 1)
+    //   } else {
+    //     // -z 方向
+    //     vy.crossVectors(up, mx)
+    //   }
+    //   vy.multiplyScalar(distanceUp)
+    //   panOffset.copy(vx.add(vy))
       update()
     }
 
@@ -235,13 +250,7 @@
       })
     }
 
-    /*
-         关于使用鼠标控制正交投影相机移动的个人理解：
-
-         在正交相机中，通过计算鼠标移动在正交投影框内的相对位移，然后重新计算正交相机的投影矩阵。
-         
-         同时要更新目标位置的相对位移，否则在屏幕上只有相机在动，看的物体会变形
-    */
+   
   </script>
 </body>
 

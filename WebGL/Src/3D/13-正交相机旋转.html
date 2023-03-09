@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>视图旋转</title>
+  <title>13-正交相机旋转</title>
   <link rel="icon" href="https://img.kaikeba.com/kkb_portal_icon.ico">
   <style>
     body {
@@ -37,9 +37,11 @@
       }
   </script>
   <script type="module">
+
+
     import { initShaders } from '../../../Utils/LoadShader.js';
     import {  Matrix4, Vector2, Vector3, Quaternion, Object3D,
-      OrthographicCamera, PerspectiveCamera } from 'https://unpkg.com/three/build/three.module.js';
+      OrthographicCamera, PerspectiveCamera,Spherical } from 'https://unpkg.com/three/build/three.module.js';
     import PolyEx from '/Utils/PolyEx.js'
 
     const canvas = document.getElementById('canvas');
@@ -66,7 +68,6 @@
     const camera = new OrthographicCamera(
       left, right, top, bottom, near, far
     )
-    console.log( left, right, top, bottom, near, far);
     camera.position.copy(eye)
     camera.lookAt(target)
     camera.updateMatrixWorld()
@@ -101,74 +102,100 @@
       new Matrix4().setPosition(0.5, 0, -2).elements
     )
 
-/*
-  button 点击事件对应的按键序号：0 为左键、1 为中键、2 为右键。在左撇子的配置环境下，按键值相反。
 
-  组合键的值就不一样了。
-  buttons 鼠标事件触发时按下的按键值：左键为 1，右键为 2，中键为 4，第四个（如浏览器返回键）为 8，
-  第五个（如浏览器前进键）为 16。若多个按键按下，则返回全部按下按键的逻辑值之和。例如，按下左键和右键时，返回 3 (= 1 | 2)。
-*/
     /* 声明基础数据 */
+    //鼠标事件集合
     const mouseButtons = new Map([
-      [0, 'pan']
+      [0, 'rotate'],
+      [2, 'pan'],
     ])
+    //轨道状态
     let state = 'none'
-
-    /* 平移轨道 */
+    //2PI
+    const pi2 = Math.PI * 2
+    //鼠标拖拽的起始位和结束位，无论是左键按下还是右键按下
     const [dragStart, dragEnd] = [
       new Vector2(),
       new Vector2(),
     ]
+
+    /* 平移轨道 */
+    //平移量
     const panOffset = new Vector3()
+    //是否沿相机y轴平移相机
     const screenSpacePanning = true
 
-    //在canvas上绑定鼠标事件  禁止右键菜单
+    /* 缩放轨道 */
+    //滚轮在每次滚动时的缩放系数
+    const zoomScale = 0.95
+
+    /* 旋转轨道 */
+    const spherical = new Spherical()
+      .setFromVector3(
+        camera.position.clone().sub(target)
+      )
+
+    /* 取消右击菜单的显示 */
     canvas.addEventListener('contextmenu', (event) => {
-      event.preventDefault()  
+      event.preventDefault()
     })
+
+    /* 指针按下时，设置拖拽起始位，获取轨道控制器状态。 */
     canvas.addEventListener('pointerdown', ({ clientX, clientY, button }) => {
       dragStart.set(clientX, clientY)
-      console.log(button)
       state = mouseButtons.get(button)
     })
-    canvas.addEventListener('pointermove', (event) => {
+
+    /* 指针移动时，若控制器处于平移状态，平移相机；若控制器处于旋转状态，旋转相机。 */
+    canvas.addEventListener('pointermove', ({ clientX, clientY }) => {
+      dragEnd.set(clientX, clientY)
       switch (state) {
         case 'pan':
-          handleMouseMovePan(event)
+          pan(dragEnd.clone().sub(dragStart))
+          break
+        case 'rotate':
+          rotate(dragEnd.clone().sub(dragStart))
           break
       }
+      dragStart.copy(dragEnd)
     })
     canvas.addEventListener('pointerup', (event) => {
       state = 'none'
     })
 
-    function handleMouseMovePan({ clientX, clientY }) {
-      dragEnd.set(clientX, clientY)
-      pan(dragEnd.clone().sub(dragStart))
-      dragStart.copy(dragEnd)
+    //滚轮事件
+    canvas.addEventListener('wheel', handleMouseWheel)
+    function handleMouseWheel({ deltaY }) {
+      console.log('deltaY', deltaY);
+      if (deltaY < 0) {
+        dolly(1 / zoomScale)
+      } else {
+        dolly(zoomScale)
+      }
+      update()
+    }
+
+    function dolly(dollyScale) {
+      camera.zoom *= dollyScale
+      camera.updateProjectionMatrix()
     }
 
     //平移方法
     function pan({ x, y }) {
       const { right, left, top, bottom, matrix, position, up } = camera
-      const { clientWidth, clientHeight } = canvas  // 画布宽高
-     // console.log( right, left, top, bottom, matrix, position, up);
-      const cameraW = right - left  
+      const { clientWidth, clientHeight } = canvas
+      const cameraW = right - left
       const cameraH = top - bottom
       const ratioX = x / clientWidth
       const ratioY = y / clientHeight
       const distanceLeft = ratioX * cameraW
       const distanceUp = ratioY * cameraH
       const mx = new Vector3().setFromMatrixColumn(matrix, 0)
-      console.log(mx);
       const vx = mx.clone().multiplyScalar(-distanceLeft)
-      console.log(vx);
       const vy = new Vector3()
       if (screenSpacePanning) {
-        // Y方向
         vy.setFromMatrixColumn(matrix, 1)
       } else {
-        // -z 方向
         vy.crossVectors(up, mx)
       }
       vy.multiplyScalar(distanceUp)
@@ -176,16 +203,42 @@
       update()
     }
 
+    // 旋转方法
+    function rotate({ x, y }) {
+      const { clientHeight,clientWidth } = canvas
+      console.log(clientHeight)
+      spherical.theta -= pi2 * x / clientHeight
+      spherical.phi -= pi2 * y / clientHeight
+      update()
+    }
+
     function update() {
+      //基于平移量平移相机
       target.add(panOffset)
-   //   console.log(target);
       camera.position.add(panOffset)
+
+      //基于旋转量旋转相机
+      const rotateOffset = new Vector3()
+        .setFromSpherical(spherical)
+      camera.position.copy(
+        target.clone().add(rotateOffset)
+      )
+
+      //更新投影视图矩阵
       camera.lookAt(target)
       camera.updateMatrixWorld(true)
       pvMatrix.multiplyMatrices(
         camera.projectionMatrix,
         camera.matrixWorldInverse,
       )
+
+      //重置旋转量和平移量
+      spherical.setFromVector3(
+        camera.position.clone().sub(target)
+      )
+      panOffset.set(0, 0, 0)
+
+      // 渲染
       render()
     }
 
@@ -235,13 +288,12 @@
       })
     }
 
-    /*
-         关于使用鼠标控制正交投影相机移动的个人理解：
 
-         在正交相机中，通过计算鼠标移动在正交投影框内的相对位移，然后重新计算正交相机的投影矩阵。
-         
-         同时要更新目标位置的相对位移，否则在屏幕上只有相机在动，看的物体会变形
-    */
+    /*
+  正交旋转个人理解：旋转运用到了 球坐标系统，原理运用了球坐标系统与三维坐标的换算。通过鼠标的位移，
+  按照角度与位移的线性变化关系，计算出球坐标系统中的 phi与deta的变化。从来推算出三维系统中的位置变化。
+  再通过正交投影进行渲染。
+   */ 
   </script>
 </body>
 
