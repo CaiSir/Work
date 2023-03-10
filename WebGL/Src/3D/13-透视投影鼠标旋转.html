@@ -40,7 +40,7 @@
     import { initShaders } from '../../../Utils/LoadShader.js';
     import {
       Matrix4, Vector2, Vector3, Quaternion, Object3D,
-      OrthographicCamera, PerspectiveCamera
+      OrthographicCamera, PerspectiveCamera,Spherical
     } from 'https://unpkg.com/three/build/three.module.js';
     import PolyEx from '/Utils/PolyEx.js'
 
@@ -74,21 +74,6 @@
       camera.projectionMatrix,
       camera.matrixWorldInverse,
     )
-
-
-    // const camera = new OrthographicCamera(
-    //   left, right, top, bottom, near, far
-    // )
-    // console.log( left, right, top, bottom, near, far);
-    // camera.position.copy(eye)
-    // camera.lookAt(target)
-    // camera.updateMatrixWorld()
-    // const pvMatrix = new Matrix4()
-    // pvMatrix.multiplyMatrices(
-    //   camera.projectionMatrix,
-    //   camera.matrixWorldInverse,
-    // )
-
 
     const triangle1 = crtTriangle(
       [1, 0, 0, 1],
@@ -146,12 +131,17 @@
       state = mouseButtons.get(button)
     })
 
-    canvas.addEventListener('pointermove', (event) => {
+    canvas.addEventListener('pointermove', ({ clientX, clientY}) => {
+      dragEnd.set(clientX, clientY)
       switch (state) {
         case 'pan':
           handleMouseMovePan(event)
           break
+        case 'rotate':
+          rotate(dragEnd.copy.sub(dragStart))
+          break;
       }
+      dragStart.copy(dragEnd);
     })
 
     canvas.addEventListener('pointerup', (event) => {
@@ -164,6 +154,10 @@
       dragStart.copy(dragEnd)
     }
 
+    function rotate({x,y})
+    {
+       var preSpherical = new Spherical(r, p, theta);
+    }
 
     function pan({ x, y }) {
       const { matrix, position, up,fov } = camera
