@@ -117,6 +117,13 @@
       new Vector2(),
       new Vector2(),
     ]
+    const pi2 = Math.PI * 2
+    /* 旋转轨道 */
+    const spherical = new Spherical()
+      .setFromVector3(
+        camera.position.clone().sub(target)
+    )
+
     const panOffset = new Vector3()
     const screenSpacePanning = true
 
@@ -135,7 +142,7 @@
       dragEnd.set(clientX, clientY)
       switch (state) {
         case 'pan':
-          handleMouseMovePan(event)
+          handleMouseMovePan(event) 
           break
         case 'rotate':
           rotate(dragEnd.copy.sub(dragStart))
@@ -199,6 +206,7 @@
 
       update()
     }
+    
     //平移方法
     function pan1({ x, y }) {
 
